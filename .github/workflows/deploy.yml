@@ -1,0 +1,65 @@
+name: Sync Branches
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  sync_QA:
+    if: github.ref == 'refs/heads/dev'  # Solo se ejecuta si hay un push en dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+       
+      - name: Setup Git User
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "<EMAIL>"
+
+      - name: Update QA Branch
+        run: |
+          git checkout dev
+          git fetch origin
+          if git rev-parse --verify origin/QA; then
+            git checkout QA
+            git pull origin QA
+          else
+            git checkout -b QA
+          fi
+          git merge origin/dev
+          git push origin QA
+
+  sync_Production:
+    if: github.ref == 'refs/heads/main'  # Solo se ejecuta si hay un push en main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+       
+      - name: Setup Git User
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "<EMAIL>"
+
+      - name: Update Production Branch
+        run: |
+          git checkout main
+          git fetch origin
+          if git rev-parse --verify origin/Production; then
+            git checkout Production
+            git pull origin Production
+          else
+            git checkout -b Production
+          fi
+          git merge origin/main
+          git push origin Production
